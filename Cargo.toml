@@ -1,5 +1,5 @@
 [package]
-name = "rust-wfa2"
+name = "wfa2-rs"
 version = "0.1.0"
 edition = "2021"
 include = ["src/**/*", "LICENSE.md", "README.md", "CHANGELOG.md"]
