@@ -30,19 +30,24 @@ pub enum Heuristic {
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum AlignmentStatus {
-    StatusSuccessful = wfa2::WF_STATUS_SUCCESSFUL as isize,
-    StatusDropped = wfa2::WF_STATUS_UNFEASIBLE as isize,
-    StatusMaxScoreReached = wfa2::WF_STATUS_MAX_SCORE_REACHED as isize,
-    StatusOOM = wfa2::WF_STATUS_OOM as isize,
+    // [OK]
+    AlgCompleted = wfa2::WF_STATUS_ALG_COMPLETED as isize, // Success (Complete alignment found)
+    AlgPartial = wfa2::WF_STATUS_ALG_PARTIAL as isize,     // Success (Partial alignment found)
+
+    // [FAIL]
+    MaxStepsReached = wfa2::WF_STATUS_MAX_STEPS_REACHED as isize, // Maximum number of WFA-steps reached
+    OOM = wfa2::WF_STATUS_OOM as isize,                           // Maximum memory limit reached
+    Unattainable = wfa2::WF_STATUS_UNATTAINABLE as isize, // Alignment unattainable under configured heuristics
 }
 
 impl From<i32> for AlignmentStatus {
     fn from(value: i32) -> Self {
         match value {
-            x if x == wfa2::WF_STATUS_SUCCESSFUL as i32 => AlignmentStatus::StatusSuccessful,
-            wfa2::WF_STATUS_UNFEASIBLE => AlignmentStatus::StatusDropped,
-            wfa2::WF_STATUS_MAX_SCORE_REACHED => AlignmentStatus::StatusMaxScoreReached,
-            wfa2::WF_STATUS_OOM => AlignmentStatus::StatusOOM,
+            x if x == wfa2::WF_STATUS_ALG_COMPLETED as i32 => AlignmentStatus::AlgCompleted,
+            x if x == wfa2::WF_STATUS_ALG_PARTIAL as i32 => AlignmentStatus::AlgPartial,
+            wfa2::WF_STATUS_MAX_STEPS_REACHED => AlignmentStatus::MaxStepsReached,
+            wfa2::WF_STATUS_OOM => AlignmentStatus::OOM,
+            wfa2::WF_STATUS_UNATTAINABLE => AlignmentStatus::Unattainable,
             _ => panic!("Unknown alignment status: {}", value),
         }
     }
@@ -402,7 +407,7 @@ mod tests {
     fn test_aligner_indel() {
         let mut aligner = aligner_indel();
         let status = aligner.align_end_to_end(PATTERN, TEXT);
-        assert_eq!(status, AlignmentStatus::StatusSuccessful);
+        assert_eq!(status, AlignmentStatus::AlgCompleted);
         assert_eq!(aligner.score(), 6);
     }
 
@@ -410,7 +415,7 @@ mod tests {
     fn test_aligner_edit() {
         let mut aligner = aligner_edit();
         let status = aligner.align_end_to_end(PATTERN, TEXT);
-        assert_eq!(status, AlignmentStatus::StatusSuccessful);
+        assert_eq!(status, AlignmentStatus::AlgCompleted);
         assert_eq!(aligner.score(), 4);
     }
 
@@ -418,7 +423,7 @@ mod tests {
     fn test_aligner_gap_linear() {
         let mut aligner = aligner_gap_linear();
         let status = aligner.align_end_to_end(PATTERN, TEXT);
-        assert_eq!(status, AlignmentStatus::StatusSuccessful);
+        assert_eq!(status, AlignmentStatus::AlgCompleted);
         assert_eq!(aligner.score(), -12);
     }
 
@@ -426,7 +431,7 @@ mod tests {
     fn test_aligner_gap_affine() {
         let mut aligner = aligner_gap_affine();
         let status = aligner.align_end_to_end(PATTERN, TEXT);
-        assert_eq!(status, AlignmentStatus::StatusSuccessful);
+        assert_eq!(status, AlignmentStatus::AlgCompleted);
         assert_eq!(aligner.score(), -24);
         assert_eq!(aligner.cigar(), "MMMXMMMMDMMMMMMMIMMMMMMMMMXMMMMMM");
         let (a, b, c) = aligner.matching(PATTERN, TEXT);
@@ -440,7 +445,7 @@ mod tests {
     fn test_aligner_gap_affine_2pieces() {
         let mut aligner = aligner_gap_affine_2pieces();
         let status = aligner.align_end_to_end(PATTERN, TEXT);
-        assert_eq!(status, AlignmentStatus::StatusSuccessful);
+        assert_eq!(status, AlignmentStatus::AlgCompleted);
         assert_eq!(aligner.score(), -24);
     }
 
